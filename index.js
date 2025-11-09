@@ -79,11 +79,11 @@ async function getNextBosses(count = 6) {
         addSuffix: true,
       });
 
-      console.log({ humanTime });
+      return `${boss} at ${waypoint} ${humanTime}`;
     });
 
-    // console.log({ bosses });
-    // return bosses.length ? bosses : ["⚠️ No events found."];
+    // console.log({ bossesOutput });
+    return bossesOutput.length ? bossesOutput : ["⚠️ No events found."];
   } catch (err) {
     console.error("Error scraping GW2 Ninja:", err);
     return ["⚠️ Error fetching GW2 bosses."];
@@ -92,19 +92,19 @@ async function getNextBosses(count = 6) {
   }
 }
 
-// client.on("messageCreate", async (msg) => {
-//   if (msg.content.trim().toLowerCase() === "!bosses") {
-//     await msg.channel.send("Fetching next world bosses... ⏳");
-//     const bosses = await getNextBosses(6);
-//     msg.channel.send("**Next World Bosses:**\n" + bosses.join("\n"));
-//   }
-// });
+client.on("messageCreate", async (msg) => {
+  if (msg.content.trim().toLowerCase() === "!bosses") {
+    await msg.channel.send("Fetching next world bosses... ⏳");
+    const bosses = await getNextBosses(6);
+    msg.channel.send("**Next World Bosses:**\n" + bosses.join("\n"));
+  }
+});
 
-// client.once("clientReady", () => {
-//   console.log(`✅ Logged in as ${client.user.tag}`);
-// });
+client.once("clientReady", () => {
+  console.log(`✅ Logged in as ${client.user.tag}`);
+});
 
-// client.login(TOKEN);
+client.login(TOKEN);
 
-const bosses = await getNextBosses(6);
+// const bosses = await getNextBosses(6);
 // console.log(bosses.join("\n"));
