@@ -1,6 +1,12 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import puppeteer from "puppeteer";
 import dotenv from "dotenv";
+import {
+  formatDistanceToNow,
+  setHours,
+  setMinutes,
+  setSeconds,
+} from "date-fns";
 
 dotenv.config();
 
@@ -15,7 +21,7 @@ const client = new Client({
 const TOKEN = process.env.DISCORD_TOKEN; // replace with your bot token
 const URL = process.env.WORLD_BOSSES_URL;
 
-async function getNextBosses() {
+async function getNextBosses(count = 6) {
   let browser;
   try {
     browser = await puppeteer.launch({
@@ -24,52 +30,81 @@ async function getNextBosses() {
     });
 
     const page = await browser.newPage();
+
+    // Optional: spoof headers to avoid Cloudflare/bot detection
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    );
+
     await page.goto(URL, { waitUntil: "networkidle2" });
 
-    // Wait for the "Current events" section to load
-    await page.waitForSelector(".world_boss_table", { timeout: 2000 });
+    // Wait for the divs containing the events
+    await page.waitForSelector("div[title*='-']", { timeout: 1000 });
 
-    // Scrape the next 6 world bosses
-    const bosses = await page.evaluate(() => {
-      const table = document.querySelector(".world_boss_table");
-      if (!table) return [];
+    const bosses = await page.evaluate((max) => {
+      const divs = Array.from(document.querySelectorAll("div[title*='-']"));
+      return divs
+        .slice(10, 10 + max)
+        .map((div) => {
+          const title = div.getAttribute("title"); // e.g. "09:00 - Admiral Taidha Covington: [&BKgBAAA=]"
+          if (!title) return null;
 
-      const rows = Array.from(table.querySelectorAll("tr")).slice(1); // skip header
-      const events = rows
-        .map((row) => {
-          const cells = row.querySelectorAll("td");
-          const boss = cells[0]?.innerText.trim();
-          const time = cells[1]?.innerText.trim();
-          const countdown = cells[2]?.innerText.trim();
-          const waypoint = cells[5]?.innerText.trim();
-          return time && boss ? `${boss} - ${countdown} ${waypoint}` : null;
+          return title;
         })
         .filter(Boolean);
+    }, count);
 
-      return events.slice(0, 6);
+    const bossesOutput = bosses.map((title) => {
+      const match = title.match(/^(\d{2}):(\d{2}) - (.+): \[(&[^\]]+)\]$/);
+      if (!match) return null;
+
+      const [, hourStr, minuteStr, boss, waypoint] = match;
+      const hour = parseInt(hourStr, 10);
+      const minute = parseInt(minuteStr, 10);
+
+      // create a Date object for today at that hour:minute UTC
+      const now = new Date();
+      let bossTime = new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          hour,
+          minute,
+          0,
+        ),
+      );
+
+      const humanTime = formatDistanceToNow(bossTime, {
+        addSuffix: true,
+      });
+
+      console.log({ humanTime });
     });
 
-    return bosses.length ? bosses : ["⚠️ No events found."];
+    // console.log({ bosses });
+    // return bosses.length ? bosses : ["⚠️ No events found."];
   } catch (err) {
-    console.error("Error scraping GW2 bosses:", err);
-    return ["⚠️ Error fetching GW2 bosses. Check the wiki."];
+    console.error("Error scraping GW2 Ninja:", err);
+    return ["⚠️ Error fetching GW2 bosses."];
   } finally {
     if (browser) await browser.close();
   }
 }
 
-client.on("messageCreate", async (msg) => {
-  if (msg.content.trim().toLowerCase() === "!bosses") {
-    msg.channel.send("Fetching next world bosses!");
+// client.on("messageCreate", async (msg) => {
+//   if (msg.content.trim().toLowerCase() === "!bosses") {
+//     await msg.channel.send("Fetching next world bosses... ⏳");
+//     const bosses = await getNextBosses(6);
+//     msg.channel.send("**Next World Bosses:**\n" + bosses.join("\n"));
+//   }
+// });
 
-    const bosses = await getNextBosses();
-    const reply = bosses.join("\n");
-    msg.channel.send("**Next World Bosses:**\n" + reply);
-  }
-});
+// client.once("clientReady", () => {
+//   console.log(`✅ Logged in as ${client.user.tag}`);
+// });
 
-client.once("clientReady", () => {
-  console.log(`✅ Logged in as ${client.user.tag}`);
-});
+// client.login(TOKEN);
 
-client.login(TOKEN);
+const bosses = await getNextBosses(6);
+// console.log(bosses.join("\n"));
