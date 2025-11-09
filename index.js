@@ -203,10 +203,8 @@ client.on("messageCreate", async (msg) => {
   }
 });
 
-// client.once("clientReady", () => {
-//   console.log(`✅ Logged in as ${client.user.tag}`);
-// });
+client.once("clientReady", () => {
+  console.log(`✅ Logged in as ${client.user.tag}`);
+});
 
-// client.login(TOKEN);
-
-console.log(worldBosses.output);
+client.login(TOKEN);
