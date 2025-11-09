@@ -388,16 +388,16 @@ client.on("messageCreate", async (msg) => {
     await msg.channel.send("Fetching all events. Please wait ⏳");
     const events = await getAllEvents();
 
-    const allEventsOutput = Object.entries(events)
-      .map(([group, sections]) => {
-        const sectionLines = sections
-          .map((s) => `**${s.name}**\n${s.output}`)
-          .join("\n");
-        return `**===${group}===**\n${sectionLines}`;
-      })
-      .join("\n\n");
+    const allEventsOutput = Object.entries(events).map(([group, sections]) => {
+      const sectionLines = sections
+        .map((s) => `**${s.name}**\n${s.output}`)
+        .join("\n");
+      return `**===${group}===**\n${sectionLines}`;
+    });
 
-    msg.channel.send(allEventsOutput);
+    allEventsOutput.forEach((output) => {
+      msg.channel.send(output);
+    });
   }
 });
 
