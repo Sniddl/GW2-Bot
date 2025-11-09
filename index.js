@@ -27,15 +27,10 @@ async function getNextBosses() {
     await page.goto(URL, { waitUntil: "networkidle2" });
 
     // Wait for the "Current events" section to load
-    await page.waitForSelector("#Current_events", { timeout: 1000 });
+    await page.waitForSelector(".world_boss_table", { timeout: 2000 });
 
     // Scrape the next 6 world bosses
     const bosses = await page.evaluate(() => {
-      const heading = document
-        .querySelector("#Current_events")
-        ?.closest("h2, h3, h4");
-      if (!heading) return [];
-
       const table = document.querySelector(".world_boss_table");
       if (!table) return [];
 
