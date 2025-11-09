@@ -1,12 +1,7 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import puppeteer from "puppeteer";
 import dotenv from "dotenv";
-import {
-  formatDistanceToNow,
-  setHours,
-  setMinutes,
-  setSeconds,
-} from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 
 dotenv.config();
 
@@ -94,7 +89,7 @@ async function getNextBosses(count = 6) {
 
 client.on("messageCreate", async (msg) => {
   if (msg.content.trim().toLowerCase() === "!bosses") {
-    await msg.channel.send("Fetching next world bosses... ⏳");
+    await msg.channel.send("Fetching next world bosses. Please wait ⏳");
     const bosses = await getNextBosses(6);
     msg.channel.send("**Next World Bosses:**\n" + bosses.join("\n"));
   }
