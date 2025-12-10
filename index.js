@@ -381,7 +381,7 @@ async function getAllEvents() {
               const [, boss, waypoint] = title.match(
                 /^\d{2}:\d{2} - (.+): \[(&[^\]]+)\]$/,
               );
-              return `${boss} at ${waypoint} ${humanTime}`;
+              return `${boss} at [${waypoint}] ${humanTime}`;
             } catch (err) {
               return `Nothing is scheduled - ${humanTime}`;
             }
